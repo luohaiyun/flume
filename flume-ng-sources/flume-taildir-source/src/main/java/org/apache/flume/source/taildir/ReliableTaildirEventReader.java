@@ -30,6 +30,7 @@ import org.apache.flume.FlumeException;
 import org.apache.flume.annotations.InterfaceAudience;
 import org.apache.flume.annotations.InterfaceStability;
 import org.apache.flume.client.avro.ReliableEventReader;
+import org.apache.flume.source.taildir.util.WinFileUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,6 +49,7 @@ import java.util.Map.Entry;
 @InterfaceStability.Evolving
 public class ReliableTaildirEventReader implements ReliableEventReader {
   private static final Logger logger = LoggerFactory.getLogger(ReliableTaildirEventReader.class);
+  public static final String OS_NAME = System.getProperty("os.name").toLowerCase();
 
   private final List<TaildirMatcher> taildirCache;
   private final Table<String, String, String> headerTable;
@@ -281,7 +283,12 @@ public class ReliableTaildirEventReader implements ReliableEventReader {
 
 
   private long getInode(File file) throws IOException {
-    long inode = (long) Files.getAttribute(file.toPath(), "unix:ino");
+    long inode;
+    if (OS_NAME.contains("windows")) {
+      inode = Long.parseLong(WinFileUtil.getFileId(file.toPath().toString()));
+    } else {
+      inode = (long) Files.getAttribute(file.toPath(), "unix:ino");
+    }
     return inode;
   }
 
